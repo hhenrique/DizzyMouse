@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,30 +15,54 @@ namespace DizzyMouse
         public static void Main(string[] args)
         {
             var frequency = TimeSpan.FromSeconds(55); // one move each 55 seconds.
+            var delta = 1; // 1 pixel
 
-            if (args != null && args.Length == 1)
-            {
-                if (Int32.TryParse(args[0], out int parameter)) {
-                    if (parameter < TimeSpan.FromHours(1).TotalSeconds)
+            if (args != null) {
+                if (args.Length >= 1)
+                {
+                    if (Int32.TryParse(args[0], out int parameter))
                     {
-                        frequency = TimeSpan.FromSeconds(parameter);
+                        if (parameter < TimeSpan.FromHours(1).TotalSeconds)
+                        {
+                            frequency = TimeSpan.FromSeconds(parameter);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"The frequency of {parameter} is longer than one hour. Using {frequency.TotalSeconds} seconds instead.");
+                        }
                     }
                     else
                     {
-                        Console.WriteLine($"The frequency of {parameter} is longer than one hour. Using {frequency.TotalSeconds} seconds instead.");
+                        Console.WriteLine($"The parameter {parameter} is invalid. Using {frequency.TotalSeconds} seconds instead.");
                     }
                 }
-                else
+                if (args.Length >= 2)
                 {
-                    Console.WriteLine($"The parameter {parameter} is invalid. Using {frequency.TotalSeconds} seconds instead.");
+                    if (Int32.TryParse(args[1], out int parameter))
+                    {
+                        if (parameter > 0 && parameter < 20)
+                        {
+                            delta = parameter;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"The delta of {parameter} is invalid. Using {delta} pixels instead.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"The parameter {parameter} is invalid. Using {delta} pixels instead.");
+                    }
                 }
             }
+
+            Console.WriteLine("DizzyMouse");
+            var pixels = delta == 1 ? "pixel" : "pixels";
+            Console.WriteLine($"Simulating presence by moving the mouse {delta} {pixels} each {frequency} seconds.");
 
             var tokenSource = new CancellationTokenSource();
             var task = CreateNeverEndingTask(now =>
             {
-                int delta = 1; // one pixel
-
                 // https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-input
                 var input = new MOUSE_INPUT()
                 {
